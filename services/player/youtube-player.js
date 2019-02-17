@@ -70,18 +70,18 @@ module.exports = class YoutubePlayer extends Player
         } else if (queue.queue_end_reached === true && state.loop === false) return this.emit('play', 'Music has finished playing for given guild. Looping is not enabled.', guild, channel);
 
         let track = this._getTrack(queue);
-        let trackTitle = track.title.replace(/[ *?!]/gi, '_') + '.mp3';
-        const hash = crypto.createHash('sha256');
-        hash.update(trackTitle);
-        const trackTitleHash = hash.digest('hex');
-        let filePath = `${YoutubePlayer.DOWNLOAD_DIR()}`;
-        const pathAndFilename = path.join(filePath, trackTitleHash);
-        if (fs.existsSync(pathAndFilename) === false) {
-            if (!state.seek) {
-                await this._youtube.download(track.url, pathAndFilename);
-            }
+
+        const hasher = crypto.createHash('sha256');
+        hasher.update(track.title);
+        const trackHash = hasher.digest('hex');
+
+        const pathToTrack = path.join(YoutubePlayer.DOWNLOAD_DIR(), trackHash);
+
+        if (!fs.existsSync(pathToTrack) && !state.seek) {
+            await this._youtube.download(track.url, pathToTrack);
         }
-        let dispatcher = connection.playFile(pathAndFilename, {seek: state.seek, volume: state.volume, passes: 2});
+
+        let dispatcher = connection.playFile(pathToTrack, {seek: state.seek, volume: state.volume, passes: 2});
 
         dispatcher.on('start', () => {
             state.seek = 0;
