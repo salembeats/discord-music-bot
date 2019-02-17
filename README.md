@@ -1,6 +1,6 @@
 # discord-music-bot
 
-Forked version of ```https://github.com/mindaugaskasp/discord-music-bot.git```, focused on bugfixes and reducing unnecessary code surface *(e.g., extraneous Docker configuration to debug while the core code itself doesn't work properly at all)*.
+Forked version of ```https://github.com/mindaugaskasp/discord-music-bot.git```, focused on bugfixes and reducing unnecessary code surface *(e.g., extraneous Docker configuration that existed while the core code itself didn't work properly at all)*.
 
 ## How to Use
 
