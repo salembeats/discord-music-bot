@@ -7,7 +7,7 @@
     "@mindaugaskasp/node-osu": "github:mindaugaskasp/node-osu",
     "@mindaugaskasp/node-riot": "github:mindaugaskasp/node-riot",
     "@mindaugaskasp/node-twitch": "github:mindaugaskasp/node-twitch",
-    "@mindaugaskasp/node-youtube": "github:mindaugaskasp/node-youtube",
+    "@mindaugaskasp/node-youtube": "git+https://github.com/salembeats/node-yt-fork.git",
     "axios": "^0.15.3",
     "bufferutil": "^4.0.1",
     "discord.js": "^11.4.2",
