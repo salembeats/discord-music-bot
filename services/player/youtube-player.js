@@ -42,10 +42,6 @@ module.exports = class YoutubePlayer extends Player
         if (!connection) {
             return this.emit('play', 'Music player is not connected to any voice channel. Use `join` command.', guild, channel);
         }
-        if (connection.channel.members.size === 1) {
-            connection.disconnect();
-            return this.emit('play', 'Music player stopped. No people in voice channel. Disconnecting ...', guild, channel);
-        }
 
         if (timeout && timeout.count > 5) {
             return this.emit('play', 'Music player has shut itself down due to failing to play track(s) for too long. Please make sure your music queue is not corrupted.', guild, channel);
@@ -61,8 +57,8 @@ module.exports = class YoutubePlayer extends Player
             connection.dispatcher.destroy('play', 'New dispatcher initialized');
         }
 
-        if (queue.queue_end_reached === true && state.loop === true) {
-            if (state.shuffle === true) {
+        if (queue.queue_end_reached && state.loop) {
+            if (state.shuffle) {
                 this.shuffle(guild, channel);
             }
             this._resetQueuePosition(guild.id);
@@ -122,12 +118,10 @@ module.exports = class YoutubePlayer extends Player
             if (queue.tracks.length >= 2) {
                 queue.tracks = this._randomizeArray(queue.tracks);
                 this._queue.set(guild.id, queue);
-                this.emit('shuffle', `Music Player has shuffled _${queue.tracks.length}_ records`, guild, channel);
-            } else {
-                this.emit('shuffle', 'Music Player could not shuffle tracks - not enough tracks present', guild, channel)
+                this.emit('shuffle', `Shuffled playlist.`, guild, channel);
             }
         } else {
-            this.emit('shuffle', 'Music Player could not shuffle track list at the moment.', guild, channel)
+            this.emit('shuffle', 'There is nothing to shuffle.', guild, channel)
         }
     }
 
@@ -165,7 +159,8 @@ module.exports = class YoutubePlayer extends Player
     {
         let state = this._state.get(guild.id);
         let connection = guild.voiceConnection;
-        if (state && connection && (connection.dispatcher || connection.speaking === true)) {
+
+        if (!!state && !!connection && (connection.dispatcher || connection.speaking === true)) {
             connection.dispatcher.end('skip() method initiated');
             return this.emit('skip', 'Music player is skipping.', guild, channel)
         } else this.emit('skip', 'Music Player could not skip track at the moment. Player not connected or is not playing anything yet.', guild, channel)
@@ -295,12 +290,12 @@ module.exports = class YoutubePlayer extends Player
             embed
                 .setAuthor(`Playing ${track.title}`, track.image, track.url)
                 // .setColor('RANDOM')
-                .addField('Playlist Index', `${track.position} / ${track.total - 1}`, true)
+                .addField('Playlist Index', `${track.position + 1} / ${track.total}`, true)
                 // .addField('Duration', `${track.duration}`, true)
                 // .addField('Volume', `${connection.dispatcher.volume * 100} %`, true)
                 // .addField('Requested By', guild.members.get(track.added_by) || '?', true)
                 // .setImage(track.image)
-                .setTimestamp();
+                // .setTimetamp();
             return embed;
         }
         return null;
