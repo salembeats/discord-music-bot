@@ -70,18 +70,20 @@ module.exports = class YoutubePlayer extends Player
         } else if (queue.queue_end_reached === true && state.loop === false) return this.emit('play', 'Music has finished playing for given guild. Looping is not enabled.', guild, channel);
 
         let track = this._getTrack(queue);
-        let trackTitle = track.title.replace(/[ *?!]/gi, '_') + '.mp3';
-        const hash = crypto.createHash('sha256');
-        hash.update(trackTitle);
-        const trackTitleHash = hash.digest('hex');
-        let filePath = `${YoutubePlayer.DOWNLOAD_DIR()}`;
-        const pathAndFilename = path.join(filePath, trackTitleHash);
-        if (fs.existsSync(pathAndFilename) === false) {
-            if (!state.seek) {
-                await this._youtube.download(track.url, pathAndFilename);
-            }
+
+        const hasher = crypto.createHash('sha256');
+        hasher.update(track.title);
+        const trackHash = hasher.digest('hex');
+
+        const pathToTrack = path.join(YoutubePlayer.DOWNLOAD_DIR(), trackHash);
+
+        if (!fs.existsSync(pathToTrack) && !state.seek) {
+            await new Promise((resolve, reject) => {
+                this._youtube.download(track.url, pathToTrack).then(() => resolve());
+            });
         }
-        let dispatcher = connection.playFile(pathAndFilename, {seek: state.seek, volume: state.volume, passes: 2});
+
+        let dispatcher = connection.playFile(pathToTrack, {seek: state.seek, volume: state.volume, passes: 2});
 
         dispatcher.on('start', () => {
             state.seek = 0;
@@ -291,13 +293,13 @@ module.exports = class YoutubePlayer extends Player
             let track = queue.tracks[queue.position];
             let embed = new Discord.RichEmbed();
             embed
-                .setAuthor(`Playing - 🎵 ${track.title} | ${track.source} 🎵`, track.image, track.url)
-                .setColor('RANDOM')
-                .addField('Song Number', `${track.position+1} / ${track.total}`, true)
-                .addField('Duration', `${track.duration}`, true)
-                .addField('Volume', `${connection.dispatcher.volume * 100} %`, true)
-                .addField('Requested By', guild.members.get(track.added_by) || '?', true)
-                .setImage(track.image)
+                .setAuthor(`Playing ${track.title}`, track.image, track.url)
+                // .setColor('RANDOM')
+                .addField('Playlist Index', `${track.position} / ${track.total - 1}`, true)
+                // .addField('Duration', `${track.duration}`, true)
+                // .addField('Volume', `${connection.dispatcher.volume * 100} %`, true)
+                // .addField('Requested By', guild.members.get(track.added_by) || '?', true)
+                // .setImage(track.image)
                 .setTimestamp();
             return embed;
         }
